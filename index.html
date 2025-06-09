@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title> Currency Exchange System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+            background-color:white ;
+        }
+        h1 {
+            color:green;
+        }
+        form {
+            background: white;
+            padding: 1rem;
+            border-radius: 5px;
+            max-width: 400px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-top: 1rem;
+        }
+        input, select {
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 0.25rem;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        button {
+            margin-top: 1.5rem;
+            padding: 0.75rem;
+            width: 100%;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            margin-top: 1.5rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1> XYZ- COMPANY <br/><br/>
+        CURRENCY EXCHANGE PLATFORM</h1>
+    <form id="exchangeForm">
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" name="amount" min="0" step="any" required />
+
+        <label for="from currency">from :</label>
+        <select id="fromCurrency" name="fromCurrency" required>
+            <option value="" disabled selected>Select currency</option>
+            <option value="USD">USD - US Dollar</option>
+            <option value="EUR">EUR - Euro</option>
+            <option value="GBP">GBP - British Pound</option>
+            <option value="JPY">JPY - Japanese Yen</option>
+            <option value="KES">KES - Kenyan Shilling</option>
+           <option value="RWF">RWF - Rwandan franc</option>  
+        </select>
+
+        <label for="toCurrency">To:</label>
+        <select id="toCurrency" name="toCurrency" required>
+            <option value="" disabled selected>Select currency</option>
+            <option value="USD">USD - US Dollar</option>
+            <option value="EUR">EUR - Euro</option>
+            <option value="GBP">GBP - British Pound</option>
+            <option value="JPY">JPY - Japanese Yen</option>
+            <option value="KES">KES - Kenyan Shilling</option>
+        </select>
+
+        <button type="submit">Convert</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        const apiKey = 'https://open.er-api.com/v6/latest/'; // Free API endpoint base URL
+
+        async function fetchExchangeRates(base = 'USD') {
+            try {
+                const response = await fetch(apiKey + base);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch exchange rates');
+                }
+                const data = await response.json();
+                if (data.result !== 'success') {
+                    throw new Error('API returned error: ' + data['error-type']);
+                }
+                return data.rates;
+            } catch (error) {
+                console.error('Error fetching exchange rates:', error);
+                return null;
+            }
+        }
+
+        document.getElementById('exchangeForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const amount = parseFloat(document.getElementById('amount').value);
+            const fromCurrency = document.getElementById('fromCurrency').value;
+            const toCurrency = document.getElementById('toCurrency').value;
+
+            if (fromCurrency === toCurrency) {
+                document.getElementById('result').textContent = "Please select different currencies.";
+                return;
+            }
+
+            if (isNaN(amount) || amount <= 0) {
+                document.getElementById('result').textContent = "Please enter a valid amount.";
+                return;
+            }
+
+            const rates = await fetchExchangeRates(fromCurrency);
+            if (!rates) {
+                document.getElementById('result').textContent = "Failed to fetch exchange rates. Please try again later.";
+                return;
+            }
+
+            const rate = rates[toCurrency];
+            if (!rate) {
+                document.getElementById('result').textContent = `Exchange rate not available for ${toCurrency}.`;
+                return;
+            }
+
+            const convertedAmount = amount * rate;
+            document.getElementById('result').textContent = 
+                `${amount.toFixed(2)} ${fromCurrency} = ${convertedAmount.toFixed(2)} ${toCurrency}`;
+        });
+    </script>
+</body>
+</html>
